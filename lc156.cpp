@@ -19,3 +19,35 @@ return the root of the binary tree [4,5,2,#,#,3,1].
  5   2
     / \
    3   1  
+
+/**
+ * Definition for a binary tree node.
+ * struct TreeNode {
+ *     int val;
+ *     TreeNode *left;
+ *     TreeNode *right;
+ *     TreeNode(int x) : val(x), left(NULL), right(NULL) {}
+ * };
+ */
+class Solution {
+public:
+    TreeNode* upsideDownBinaryTree(TreeNode* root) {
+        
+        if (root == NULL) return NULL;
+        if (root->left == NULL) return root;
+        
+        TreeNode* l = root->left;
+        TreeNode* new_head = upsideDownBinaryTree(l);
+        
+        TreeNode* cur = new_head;
+        while (cur->right) cur = cur->right;
+        
+        cur->left = root->right;
+        cur->right = root;
+        root->left = NULL;
+        root->right = NULL;
+        
+        return new_head;
+        
+    }
+};
