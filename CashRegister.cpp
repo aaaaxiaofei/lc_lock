@@ -69,8 +69,11 @@ private:
     void Dispense( denomination d, int count );
 
     // there is a problem!
-    void ReportError( char *text ) const;
+    void ReportError( const char *text ) const;
 
+    // Depth first search for available change combination.
+    bool ChangeAvailable( int amountOwed, const denomination unit[],
+                          int solution[], const int UNIT_SIZE, int cur);
 };
 
 // -------------------------------------------------------
@@ -107,7 +110,7 @@ void CashRegister::Dispense( denomination d, int count )
 // Function:    CashRegister::ReportError
 // Purpose:     there is a problem!
 
-void CashRegister::ReportError( char *text ) const
+void CashRegister::ReportError( const char *text ) const
 {
     // show the problem on the display 
     // mDisplay << text;
@@ -122,35 +125,103 @@ void CashRegister::ReportError( char *text ) const
 
 void CashRegister::MakeChange( double amountPaid, double amountOwed )
 {
+    std::string err_msg;    // Error Message
 
-    using namespace std;
-    string err = "Customer still needs to pay " + to_string(-amountOwed) + " to finish transaction";
-    if (amountOwed < 0) ReportError("hehe");
-    else if (amountOwed == 0) ReportError("Transaction done, no more changes");
+    // Customer owe money to the register.
+    if (amountOwed < 0.0) {
+        err_msg = "You still need to pay $" + 
+                  std::to_string(-amountOwed) + ".\n";
+        ReportError(err_msg.c_str());
+    }
+    // Transaction is clear.
+    else if (amountOwed == 0.0) {
+        err_msg = "Transaction is complete, no more changes.\n";
+        ReportError(err_msg.c_str());
+    }
+    // Dispense changes.
     else {
-        std::cout << "inside MakeChange function" << std::  endl;
-        std::map< denomination, int >::const_iterator it = mTill.begin();
-        for ( ; it != mTill.end(); it++ )
-            cout << it->first << " has amount " << it->second << endl;
+        // Convert dollar to penny, ignore amount less than penny.
+        int amountOwedInt = amountOwed * 100;
 
-        // if (ChangeAvailable()) {
-
-        // }
-        // else {
-        //     ReportError();
-        //     Dispense(AmountPaid);
-        // }
+        // Solution array.
+        const int UNIT_SIZE(11);
+        int solution[UNIT_SIZE] = {0};
+        denomination unit[UNIT_SIZE] = 
+            {kPenny, kNickel, kDime, kQuarter, kHalf, 
+             kDollar, kFive, kTen, kTwenty, kFifty, kHundred};
         
+        // If able to make changes, dispense the amount accordingly. 
+        if (ChangeAvailable(amountOwedInt, unit, 
+            solution, UNIT_SIZE, UNIT_SIZE-1)) 
+        {
+            for (int i = 0; i < UNIT_SIZE; i++) {
+                Dispense(unit[i], solution[i]);
+            }
+        }
+        // If not able to make changes, refund the paid amount.
+        else {
+            err_msg = "Not enough changes in the till, you get refund.\n";
+            ReportError(err_msg.c_str());
+            MakeChange(0, amountPaid);
+        }
+    }
+}
+
+bool CashRegister::ChangeAvailable
+(int amountOwed, const denomination unit[], 
+ int solution[], const int UNIT_SIZE, int cur)
+{
+    // Current denomination.
+    const denomination denom = unit[cur];
+
+    // The amount is already clear, return.
+    if (amountOwed == 0) {
+        return true;
     }
 
+    // Boundary condition.
+    else if (cur == 0) {
+        // Penny can clear all the due amount.
+        if (mTill[denom] >= amountOwed) {
+            solution[cur] = amountOwed;
+            return true;
+        }
+        // Penny not enough. 
+        else {
+            return false;
+        }
+    }
 
+    // Due amount can be cleared by current bill.
+    if (amountOwed % denom == 0 && 
+        mTill[denom] >= amountOwed / denom) 
+    {
+        solution[cur] = amountOwed / denom;
+        return true;
+    }
+
+    // Due amount needs to be cleared with smaller bill.
+    else {
+        int maxNum = std::min(mTill[denom], amountOwed / denom);
+
+        for (int i = maxNum; i >= 0; i--) {
+            if (ChangeAvailable(amountOwed - denom * i, 
+                unit, solution, UNIT_SIZE, cur - 1)) 
+            {
+                solution[cur] = i;
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 void CashRegister::initialize() {
-    mTill[kPenny] = 100;
-    mTill[kNickel] = 200;
-    mTill[kDime] = 300;
-    mTill[kQuarter] = 400;
+    mTill[kPenny] = 4;
+    mTill[kNickel] = 0;
+    mTill[kDime] = 3;
+    mTill[kQuarter] = 1;
     mTill[kHalf] = 500;
     mTill[kDollar] = 600;
     mTill[kFive] = 700;

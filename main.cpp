@@ -5,11 +5,9 @@ using namespace std;
 
 int main () {
 
-	cout << "Hello ansys" << endl;
-
 	CashRegister cr;
 	cr.initialize();
 	
-	cr.MakeChange(1,-3);
+	cr.MakeChange(1, 10);
 	return 0;
 }
