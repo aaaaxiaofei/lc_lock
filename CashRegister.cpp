@@ -18,6 +18,7 @@
    --------------------------------------------------------------------------------- */
 #include <map>
 #include <string>
+#include <cmath>
 #include <iostream>
 
 
@@ -141,9 +142,9 @@ void CashRegister::MakeChange( double amountPaid, double amountOwed )
     // Dispense changes.
     else {
         // Convert dollar to penny, ignore amount less than penny.
-        int amountOwedInt = amountOwed * 100;
+        int amountOwedInt = std::round(amountOwed * 100);
 
-        // Solution array.
+        // Initialize solution array.
         const int UNIT_SIZE(11);
         int solution[UNIT_SIZE] = {0};
         denomination unit[UNIT_SIZE] = 
@@ -192,25 +193,17 @@ bool CashRegister::ChangeAvailable
         }
     }
 
-    // Due amount can be cleared by current bill.
-    if (amountOwed % denom == 0 && 
-        mTill[denom] >= amountOwed / denom) 
-    {
-        solution[cur] = amountOwed / denom;
-        return true;
-    }
+    // Search for solution with current and smaller bills.
 
-    // Due amount needs to be cleared with smaller bill.
-    else {
-        int maxNum = std::min(mTill[denom], amountOwed / denom);
+    int maxNum = std::min(mTill[denom], amountOwed / denom);       
 
-        for (int i = maxNum; i >= 0; i--) {
-            if (ChangeAvailable(amountOwed - denom * i, 
-                unit, solution, UNIT_SIZE, cur - 1)) 
-            {
-                solution[cur] = i;
-                return true;
-            }
+    for (int i = maxNum; i >= 0; i--) {
+        // Find a solution, return. 
+        if (ChangeAvailable(amountOwed - denom * i, 
+            unit, solution, UNIT_SIZE, cur - 1)) 
+        {
+            solution[cur] = i;
+            return true;
         }
     }
 
