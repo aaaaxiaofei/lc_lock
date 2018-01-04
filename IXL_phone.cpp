@@ -20,8 +20,7 @@ int randomFibonacci(int n) {
   catch (const runtime_error& e) {
     cerr << e.what() << endl;
     throw;
-  }
-  
+  } 
   return 0;
 }
 
@@ -29,7 +28,7 @@ int randomFibonacci(int n) {
 string repeatDecimal(int numerator, int denominator) {
   
   if (denominator == 0) return "";
-  else if (numerator == 0) return "0";
+  if (numerator == 0) return "0";
    
   numerator = abs(numerator);
   denominator = abs(denominator);
@@ -52,6 +51,10 @@ string repeatDecimal(int numerator, int denominator) {
 // Solution two
 class Solution {
 public:
+    // Things to consider:
+    // zero numerator or denominator
+    // negative number
+    // interger min/max
     string fractionToDecimal(int numerator, int denominator) {
         
         unordered_map<int, int> m;
@@ -211,36 +214,46 @@ private:
 
 
 // Stickers to spell word
+
+#include <climits> // to use INT_MAX
 class Solution {
 public:
     int minStickers(vector<string>& stickers, string target) {
-        int m = stickers.size();
-        vector<vector<int>> mp(m, vector<int>(26, 0));
+        
+        // dp[str] = min{1 + dp[string_remain]};
+        // dp[""] = 0;      
+        int n = stickers.size();
         unordered_map<string, int> dp;
-        // count characters a-z for each sticker 
-        for (int i = 0; i < m; i++) 
-            for (char c:stickers[i]) mp[i][c-'a']++;
-        dp[""] = 0;
-        return helper(dp, mp, target);
-    }
-private:
-    int helper(unordered_map<string, int>& dp, vector<vector<int>>& mp, string target) {
-        if (dp.count(target)) return dp[target];
-        int ans = INT_MAX, n = mp.size();
-        vector<int> tar(26, 0);
-        for (char c:target) tar[c-'a']++;
-        // try every sticker
-        for (int i = 0; i < n; i++) {
-            // optimization
-            if (mp[i][target[0]-'a'] == 0) continue; 
-            string s;
-            // apply a sticker on every character a-z
-            for (int j = 0; j < 26; j++) 
-                if (tar[j]-mp[i][j] > 0) s += string(tar[j]-mp[i][j], 'a'+j);
-            int tmp = helper(dp, mp, s);
-            if (tmp!= -1) ans = min(ans, 1+tmp);
+        
+        // Convert vector<string> representation to vector<vector<int>> 
+        vector<vector<int>> vec(n, vector<int>(26, 0));
+        for (int i = 0; i < stickers.size(); i++) {
+            for (char c : stickers[i]) {
+                vec[i][c - 'a']++;
+            }
         }
-        dp[target] = ans == INT_MAX? -1:ans;
+
+        dp[""] = 0;        
+        return helper(target, dp, vec);
+    }
+    
+    int helper(string target, unordered_map<string, int>& dp, vector<vector<int>>& vec) {
+        if (dp.count(target)) return dp[target];
+        int result = INT_MAX;
+        vector<int> v(26, 0);
+        for (char c : target) v[c - 'a']++;
+
+        for (int i = 0; i < vec.size(); i++) {
+            // make sure current sticker can be use
+            if (vec[i][target[0] - 'a'] == 0) continue;
+            string remain = "";
+            for (int j = 0; j < 26; j++) {
+                if (v[j] >= vec[i][j]) remain += string(v[j] - vec[i][j], 'a' + j);
+            }
+            int temp = helper(remain, dp, vec);
+            if (temp != -1) result = min(result, temp + 1);
+        }
+        dp[target] = result == INT_MAX ? -1 : result;        
         return dp[target];
     }
 };
@@ -316,7 +329,7 @@ public:
         return res;
     }
 private:
-    void combinationSum(vector<int> &candidates, int target, vector<vector<int> > &res, vector<int> &combination, int begin) {
+    void combinationSum(vector<int> &candidates, int target, vector<vector<int>> &res, vector<int> &combination, int begin) {
         if (!target) {
             res.push_back(combination);
             return;
