@@ -25,30 +25,6 @@ int randomFibonacci(int n) {
 }
 
 // Repeat Decimal
-string repeatDecimal(int numerator, int denominator) {
-  
-  if (denominator == 0) return "";
-  if (numerator == 0) return "0";
-   
-  numerator = abs(numerator);
-  denominator = abs(denominator);
-  
-  // Make sure the decimal is 0.****
-  numerator %= denominator;
-  
-  unordered_map<int, int> m;
-  string result = "";
-
-  while (m.count(numerator) == 0) {
-    m[numerator] = result.length();
-    numerator *= 10;
-    result += to_string(numerator / denominator);
-    numerator %= denominator;
-  }
-  
-  return result.substr(m[numerator]);
-}
-// Solution two
 class Solution {
 public:
     // Things to consider:
